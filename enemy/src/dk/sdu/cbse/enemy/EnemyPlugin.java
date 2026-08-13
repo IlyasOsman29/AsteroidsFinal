@@ -1,8 +1,36 @@
 package dk.sdu.cbse.enemy;
-import dk.sdu.cbse.api.*;
+
+import dk.sdu.cbse.api.Entity;
+import dk.sdu.cbse.api.GameData;
+import dk.sdu.cbse.api.IEntityProcessingService;
+import dk.sdu.cbse.api.IGamePluginService;
+
 public final class EnemyPlugin implements IGamePluginService, IEntityProcessingService {
- public String name(){return "Enemy";}
- public void start(GameData d){if(d.entities().stream().noneMatch(e->e.getType().equals("ENEMY"))){Entity e=new Entity("ENEMY",100,100,16);e.setHealth(3);d.entities().add(e);}}
- public void stop(GameData d){d.entities().removeIf(e->e.getType().equals("ENEMY"));}
- public void process(GameData d,double dt){Entity p=d.entities().stream().filter(x->x.getType().equals("PLAYER")).findFirst().orElse(null);for(Entity e:d.entities().stream().filter(x->x.getType().equals("ENEMY")).toList()){if(p!=null){double a=Math.atan2(p.getY()-e.getY(),p.getX()-e.getX());e.setRotation(Math.toDegrees(a));e.setX(e.getX()+Math.cos(a)*45*dt);e.setY(e.getY()+Math.sin(a)*45*dt);}d.wrap(e);}}
+    @Override public String name() { return "Enemy"; }
+
+    @Override
+    public void start(GameData data) {
+        if (data.firstEntity(Entity.ENEMY) == null) {
+            Entity enemy = new Entity(Entity.ENEMY, 100, 100, 16);
+            enemy.setHealth(3);
+            data.entities().add(enemy);
+        }
+    }
+
+    @Override public void stop(GameData data) {
+        data.entities().removeIf(entity -> entity.getType().equals(Entity.ENEMY));
+    }
+
+    @Override
+    public void process(GameData data, double deltaSeconds) {
+        Entity player = data.firstEntity(Entity.PLAYER);
+        if (player == null) return;
+        for (Entity enemy : data.entitiesOfType(Entity.ENEMY)) {
+            double angle = Math.atan2(player.getY() - enemy.getY(), player.getX() - enemy.getX());
+            enemy.setRotation(Math.toDegrees(angle));
+            enemy.setX(enemy.getX() + Math.cos(angle) * 45 * deltaSeconds);
+            enemy.setY(enemy.getY() + Math.sin(angle) * 45 * deltaSeconds);
+            data.wrap(enemy);
+        }
+    }
 }

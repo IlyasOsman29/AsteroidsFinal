@@ -1,6 +1,10 @@
 package dk.sdu.cbse.api;
-/** Updates game state once per frame. */
+
+/** Per-frame behaviour supplied by a gameplay module. */
 public interface IEntityProcessingService {
-    /** Pre: gameData != null, deltaSeconds >= 0. Post: owned game state may be updated. */
+    /**
+     * Pre: {@code gameData != null} and {@code deltaSeconds >= 0}.
+     * Post: owned entity state reflects one frame; optional missing entity types are tolerated.
+     */
     void process(GameData gameData, double deltaSeconds);
 }

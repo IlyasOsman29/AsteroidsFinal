@@ -1,8 +1,41 @@
 package dk.sdu.cbse.player;
-import dk.sdu.cbse.api.*;
+
+import dk.sdu.cbse.api.Entity;
+import dk.sdu.cbse.api.GameData;
+import dk.sdu.cbse.api.IEntityProcessingService;
+import dk.sdu.cbse.api.IGamePluginService;
+
 public final class PlayerPlugin implements IGamePluginService, IEntityProcessingService {
- public String name(){return "Player";}
- public void start(GameData d){ if(d.entities().stream().noneMatch(e->e.getType().equals("PLAYER"))){Entity p=new Entity("PLAYER",d.width()/2.0,d.height()/2.0,16);p.setHealth(3);d.entities().add(p);} }
- public void stop(GameData d){d.entities().removeIf(e->e.getType().equals("PLAYER"));}
- public void process(GameData d,double dt){Entity p=d.entities().stream().filter(e->e.getType().equals("PLAYER")).findFirst().orElse(null);if(p==null)return;if(d.isDown("LEFT"))p.setRotation(p.getRotation()-180*dt);if(d.isDown("RIGHT"))p.setRotation(p.getRotation()+180*dt);if(d.isDown("UP")){double a=Math.toRadians(p.getRotation());p.setDx(p.getDx()+Math.cos(a)*90*dt);p.setDy(p.getDy()+Math.sin(a)*90*dt);}p.setX(p.getX()+p.getDx()*dt);p.setY(p.getY()+p.getDy()*dt);p.setDx(p.getDx()*0.99);p.setDy(p.getDy()*0.99);d.wrap(p);}
+    @Override public String name() { return "Player"; }
+
+    @Override
+    public void start(GameData data) {
+        if (data.firstEntity(Entity.PLAYER) == null) {
+            Entity player = new Entity(Entity.PLAYER, data.width() / 2.0, data.height() / 2.0, 16);
+            player.setHealth(3);
+            data.entities().add(player);
+        }
+    }
+
+    @Override public void stop(GameData data) {
+        data.entities().removeIf(entity -> entity.getType().equals(Entity.PLAYER));
+    }
+
+    @Override
+    public void process(GameData data, double deltaSeconds) {
+        Entity player = data.firstEntity(Entity.PLAYER);
+        if (player == null) return;
+        if (data.isDown("LEFT")) player.setRotation(player.getRotation() - 180 * deltaSeconds);
+        if (data.isDown("RIGHT")) player.setRotation(player.getRotation() + 180 * deltaSeconds);
+        if (data.isDown("UP")) {
+            double angle = Math.toRadians(player.getRotation());
+            player.setDx(player.getDx() + Math.cos(angle) * 90 * deltaSeconds);
+            player.setDy(player.getDy() + Math.sin(angle) * 90 * deltaSeconds);
+        }
+        player.setX(player.getX() + player.getDx() * deltaSeconds);
+        player.setY(player.getY() + player.getDy() * deltaSeconds);
+        player.setDx(player.getDx() * 0.99);
+        player.setDy(player.getDy() * 0.99);
+        data.wrap(player);
+    }
 }

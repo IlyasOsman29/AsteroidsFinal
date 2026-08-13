@@ -1,47 +1,106 @@
 package dk.sdu.cbse.core;
 
-import dk.sdu.cbse.api.*;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import dk.sdu.cbse.api.Entity;
+import dk.sdu.cbse.api.GameData;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.nio.file.Path;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 final class GamePanel extends JPanel implements ActionListener, KeyListener {
     private final GameData data = new GameData();
     private final PluginManager plugins = new PluginManager(data);
     private long previous = System.nanoTime();
+    private String status = "Loading plugins...";
 
-    GamePanel(){
-        setBackground(Color.BLACK); setFocusable(true); addKeyListener(this);
+    GamePanel() {
+        setBackground(Color.BLACK);
+        setFocusable(true);
+        addKeyListener(this);
         new Timer(16, this).start();
-        SwingUtilities.invokeLater(() -> { requestFocusInWindow(); plugins.reload(Path.of("plugins")); });
+        SwingUtilities.invokeLater(() -> {
+            requestFocusInWindow();
+            reloadPlugins();
+        });
     }
-    @Override public void actionPerformed(ActionEvent e){
-        long now=System.nanoTime(); double dt=Math.min((now-previous)/1_000_000_000.0,0.05); previous=now;
-        data.setSize(Math.max(getWidth(),1),Math.max(getHeight(),1));
-        plugins.process(dt); repaint();
+
+    @Override
+    public void actionPerformed(ActionEvent event) {
+        long now = System.nanoTime();
+        double delta = Math.min((now - previous) / 1_000_000_000.0, 0.05);
+        previous = now;
+        data.setSize(getWidth(), getHeight());
+        plugins.process(delta);
+        repaint();
     }
-    @Override protected void paintComponent(Graphics g){
-        super.paintComponent(g); Graphics2D gg=(Graphics2D)g; gg.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
-        for(Entity e:data.entities()) draw(gg,e);
-        gg.setColor(Color.LIGHT_GRAY); gg.drawString("Arrows=move  Space=fire  R=reload plugins",12,20);
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        Graphics2D painter = (Graphics2D) graphics;
+        painter.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        data.entities().forEach(entity -> draw(painter, entity));
+        painter.setColor(Color.LIGHT_GRAY);
+        painter.drawString("Arrows=move  Space=fire  R=reload plugins  Esc=close", 12, 20);
+        painter.drawString(status, 12, 40);
     }
-    private void draw(Graphics2D g, Entity e){
-        int x=(int)e.getX(), y=(int)e.getY(), r=(int)e.getRadius();
-        switch(e.getType()){
-            case "PLAYER" -> { g.setColor(Color.CYAN); polygon(g,x,y,r,e.getRotation()); }
-            case "ENEMY" -> { g.setColor(Color.RED); polygon(g,x,y,r,e.getRotation()); }
-            case "ASTEROID" -> { g.setColor(Color.GRAY); g.drawOval(x-r,y-r,r*2,r*2); }
-            case "BULLET" -> { g.setColor(Color.YELLOW); g.fillOval(x-3,y-3,6,6); }
-            default -> { g.setColor(Color.WHITE); g.drawOval(x-r,y-r,r*2,r*2); }
+
+    private void draw(Graphics2D graphics, Entity entity) {
+        int x = (int) entity.getX();
+        int y = (int) entity.getY();
+        int radius = (int) entity.getRadius();
+        switch (entity.getType()) {
+            case Entity.PLAYER -> { graphics.setColor(Color.CYAN); polygon(graphics, x, y, radius, entity.getRotation()); }
+            case Entity.ENEMY -> { graphics.setColor(Color.RED); polygon(graphics, x, y, radius, entity.getRotation()); }
+            case Entity.ASTEROID -> { graphics.setColor(Color.GRAY); graphics.drawOval(x - radius, y - radius, radius * 2, radius * 2); }
+            case Entity.BULLET -> {
+                graphics.setColor(entity.getOwner().equals(Entity.ENEMY) ? Color.ORANGE : Color.YELLOW);
+                graphics.fillOval(x - 3, y - 3, 6, 6);
+            }
+            default -> { graphics.setColor(Color.WHITE); graphics.drawOval(x - radius, y - radius, radius * 2, radius * 2); }
         }
     }
-    private void polygon(Graphics2D g,int x,int y,int r,double rot){
-        double a=Math.toRadians(rot); int[] xs={x+(int)(Math.cos(a)*r),x+(int)(Math.cos(a+2.5)*r),x+(int)(Math.cos(a-2.5)*r)};
-        int[] ys={y+(int)(Math.sin(a)*r),y+(int)(Math.sin(a+2.5)*r),y+(int)(Math.sin(a-2.5)*r)}; g.drawPolygon(xs,ys,3);
+
+    private void polygon(Graphics2D graphics, int x, int y, int radius, double rotation) {
+        double angle = Math.toRadians(rotation);
+        int[] xs = {x + (int) (Math.cos(angle) * radius),
+                x + (int) (Math.cos(angle + 2.5) * radius),
+                x + (int) (Math.cos(angle - 2.5) * radius)};
+        int[] ys = {y + (int) (Math.sin(angle) * radius),
+                y + (int) (Math.sin(angle + 2.5) * radius),
+                y + (int) (Math.sin(angle - 2.5) * radius)};
+        graphics.drawPolygon(xs, ys, 3);
     }
-    @Override public void keyPressed(KeyEvent e){ key(e,true); if(e.getKeyCode()==KeyEvent.VK_R)plugins.reload(Path.of("plugins")); if(e.getKeyCode()==KeyEvent.VK_ESCAPE)System.exit(0); }
-    @Override public void keyReleased(KeyEvent e){ key(e,false); }
-    private void key(KeyEvent e,boolean down){ switch(e.getKeyCode()){case KeyEvent.VK_LEFT->data.setKey("LEFT",down);case KeyEvent.VK_RIGHT->data.setKey("RIGHT",down);case KeyEvent.VK_UP->data.setKey("UP",down);case KeyEvent.VK_SPACE->data.setKey("FIRE",down);} }
-    @Override public void keyTyped(KeyEvent e){}
+
+    private void reloadPlugins() {
+        plugins.reload(Path.of("plugins"));
+        status = "Active components: " + plugins.componentNames();
+        System.out.println(status);
+    }
+
+    @Override public void keyPressed(KeyEvent event) {
+        key(event, true);
+        if (event.getKeyCode() == KeyEvent.VK_R) reloadPlugins();
+        if (event.getKeyCode() == KeyEvent.VK_ESCAPE) System.exit(0);
+    }
+    @Override public void keyReleased(KeyEvent event) { key(event, false); }
+    @Override public void keyTyped(KeyEvent event) { }
+
+    private void key(KeyEvent event, boolean down) {
+        switch (event.getKeyCode()) {
+            case KeyEvent.VK_LEFT -> data.setKey("LEFT", down);
+            case KeyEvent.VK_RIGHT -> data.setKey("RIGHT", down);
+            case KeyEvent.VK_UP -> data.setKey("UP", down);
+            case KeyEvent.VK_SPACE -> data.setKey("FIRE", down);
+            default -> { }
+        }
+    }
 }
