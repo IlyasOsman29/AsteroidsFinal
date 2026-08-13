@@ -8,7 +8,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
-/** Integration smoke test for build-once, remove, reload, restore and reload. */
+/** Checks that the Player plugin can be removed and added again. */
 public final class PluginSmokeTest {
     private PluginSmokeTest() { }
 

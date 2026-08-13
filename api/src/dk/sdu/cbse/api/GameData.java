@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Shared data surface; plugins communicate through entities instead of concrete plugin classes. */
+/** Shared game state used by Core and the plugins. */
 public final class GameData {
     private final List<Entity> entities = new ArrayList<>();
     private final Set<String> keys = new HashSet<>();

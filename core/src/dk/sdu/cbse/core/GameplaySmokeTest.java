@@ -4,7 +4,7 @@ import dk.sdu.cbse.api.Entity;
 import dk.sdu.cbse.api.GameData;
 import java.nio.file.Path;
 
-/** Headless gameplay check that still accesses collision only through loaded service contracts. */
+/** Runs the main game rules without opening a window. */
 public final class GameplaySmokeTest {
     private GameplaySmokeTest() { }
 

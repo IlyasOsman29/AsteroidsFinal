@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-/** Discovers a fresh set of JPMS service providers from the current plugin directory. */
+/** Loads the services found in the plugin folder. */
 final class PluginManager {
     private final GameData data;
     private List<IGamePluginService> plugins = List.of();
@@ -46,8 +46,7 @@ final class PluginManager {
                 return;
             }
 
-            // Module readers keep JARs open on Windows. Loading private copies leaves the user-facing
-            // plugin JARs movable while the game remains alive.
+            // Load copies because Windows may lock JAR files used by a module layer.
             List<Path> layerJars = makeLayerSnapshot(installedJars);
             ModuleFinder finder = ModuleFinder.of(layerJars.toArray(Path[]::new));
             Set<String> roots = new HashSet<>();
