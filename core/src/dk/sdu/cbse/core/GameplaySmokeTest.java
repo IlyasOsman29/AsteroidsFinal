@@ -12,6 +12,13 @@ public final class GameplaySmokeTest {
         GameData data = new GameData();
         PluginManager manager = new PluginManager(data);
         manager.reload(Path.of("plugins"));
+
+        for (int frame = 0; frame < 80; frame++) {
+            manager.process(0.05);
+        }
+        require(data.firstEntity(Entity.ENEMY) != null,
+                "Enemy collided with an asteroid during the four-second opening");
+
         data.entities().clear();
 
         Entity asteroid = new Entity(Entity.ASTEROID, 100, 100, 32);
@@ -31,7 +38,7 @@ public final class GameplaySmokeTest {
             manager.process(0);
         }
         require(data.firstEntity(Entity.PLAYER) == null, "Three enemy bullets did not destroy Player");
-        System.out.println("PASS: asteroid splitting and three-hit ship damage");
+        System.out.println("PASS: safe Enemy opening, asteroid splitting and three-hit ship damage");
     }
 
     private static Entity bullet(String owner, double x, double y) {

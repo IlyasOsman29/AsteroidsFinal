@@ -5,7 +5,7 @@ AsteroidsFinal is a small Swing-rendered game focused on replaceable JPMS compon
 Installed components:
 
 - Player (three health, rotation and thrust)
-- Enemy (three health, follows Player)
+- Enemy (three health, chooses the safest corner route at spawn, then follows Player)
 - Asteroids (random movement and wrapping)
 - Weapon/Bullet (Player input plus automatic Enemy fire)
 - Collision (post-processing, ship damage, ship/asteroid destruction and recursive asteroid splitting)
@@ -38,3 +38,5 @@ Controls: Left/Right rotate, Up thrusts, Space fires, R reloads the installed JA
 On Windows, JPMS module readers normally lock JAR files. `PluginManager` therefore copies the current installed set to a private temporary snapshot before creating each layer. The layer reads the copies, leaving the user-facing files in `plugins/` movable. Reload creates a new layer; Java does not mutate or explicitly unload the old layer. After old services and the layer become unreachable, normal garbage collection can reclaim them.
 
 `PluginSmokeTest` automates the same build-once scenario, restores the JAR in `finally`, and verifies that its SHA-256 content and timestamp are unchanged.
+
+`GameplaySmokeTest` also simulates the first four seconds and requires Enemy to survive the opening asteroid field before checking asteroid splitting and three-hit ship damage.
