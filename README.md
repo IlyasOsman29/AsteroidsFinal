@@ -1,42 +1,41 @@
 # AsteroidsFinal
 
-AsteroidsFinal is a small Swing-rendered game focused on replaceable JPMS components. The stable `api` module contains only `Entity`, `GameData` and three service contracts. Core requires that API and declares `uses`; it has no source or module dependency on concrete plugins. Each gameplay JAR declares `provides ... with ...` and keeps its implementation package unexported.
+This is the final Asteroids game. It is split into JPMS modules, and the game parts are loaded as services from the `plugins` folder.
 
-Installed components:
+The project contains these parts:
 
-- Player (three health, rotation and thrust)
-- Enemy (three health, chooses the safest corner route at spawn, then follows Player)
-- Asteroids (random movement and wrapping)
-- Weapon/Bullet (Player input plus automatic Enemy fire)
-- Collision (post-processing, ship damage, ship/asteroid destruction and recursive asteroid splitting)
-- Core/Rendering (window, timing, input, drawing and runtime assembly)
+- `api`: shared entity classes and service interfaces
+- `core`: game loop, input, drawing and plugin loading
+- `player`, `enemy`, `asteroids`, `weapon`: game objects and movement
+- `collision`: collision checks after movement
 
-## Build, test and run
+Core only knows the interfaces in `api`. The other modules register their implementations with `provides` in `module-info.java`.
 
-Requirements: JDK 21 (compatible with JDK 17+).
+## Build and test
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\build.ps1
-java --module-path "build\core;build\api" -m dk.sdu.cbse.core/dk.sdu.cbse.core.PluginSmokeTest
-java --module-path "build\core;build\api" -m dk.sdu.cbse.core/dk.sdu.cbse.core.GameplaySmokeTest
-java --module-path "build\core;build\api" -m dk.sdu.cbse.core/dk.sdu.cbse.core.Main
+Requirements: JDK 21 and Maven.
+
+```text
+mvn clean verify
 ```
 
-Linux/macOS uses `./build.sh` and `:` instead of `;` in the module path.
+This also creates the plugin JAR files and runs two simple smoke tests.
 
-Controls: Left/Right rotate, Up thrusts, Space fires, R reloads the installed JAR set, Esc closes. The second line in the game shows the active component names.
+## Run the game
 
-## Dynamic component demonstration
+On Windows:
 
-1. Build once and start the game.
-2. Show `plugins/dk.sdu.cbse.player.jar`.
-3. Move that compiled JAR into a separate `disabled` folder while the game stays open.
-4. Press R. Core stops the old providers, builds a new `ModuleLayer` from the remaining JARs and Player disappears.
-5. Move the exact same JAR back. Do not run the build script.
-6. Press R. ServiceLoader discovers Player in the new layer and the ship returns.
+```text
+java --module-path "core/target/classes;api/target/classes" -m dk.sdu.cbse.core/dk.sdu.cbse.core.Main
+```
 
-On Windows, JPMS module readers normally lock JAR files. `PluginManager` therefore copies the current installed set to a private temporary snapshot before creating each layer. The layer reads the copies, leaving the user-facing files in `plugins/` movable. Reload creates a new layer; Java does not mutate or explicitly unload the old layer. After old services and the layer become unreachable, normal garbage collection can reclaim them.
+Controls: Left/Right turns, Up moves forward, Space shoots, R reloads plugins and Esc closes the game.
 
-`PluginSmokeTest` automates the same build-once scenario, restores the JAR in `finally`, and verifies that its SHA-256 content and timestamp are unchanged.
+## Try dynamic loading
 
-`GameplaySmokeTest` also simulates the first four seconds and requires Enemy to survive the opening asteroid field before checking asteroid splitting and three-hit ship damage.
+1. Build and start the game.
+2. Move `plugins/dk.sdu.cbse.player.jar` out of the folder.
+3. Press R. The player disappears.
+4. Move the same JAR back and press R again.
+
+The game does not need to be rebuilt during these steps. Core creates a new `ModuleLayer` from the JAR files that are currently in the folder.

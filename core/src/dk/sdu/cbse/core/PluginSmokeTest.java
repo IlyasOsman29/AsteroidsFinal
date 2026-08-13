@@ -17,7 +17,7 @@ public final class PluginSmokeTest {
         PluginManager manager = new PluginManager(data);
         Path plugins = Path.of("plugins");
         Path playerJar = plugins.resolve("dk.sdu.cbse.player.jar");
-        Path disabledDirectory = Path.of("build", "disabled-for-smoke-test");
+        Path disabledDirectory = Path.of("core", "target", "disabled-for-smoke-test");
         Path disabledJar = disabledDirectory.resolve(playerJar.getFileName());
         Files.createDirectories(disabledDirectory);
 

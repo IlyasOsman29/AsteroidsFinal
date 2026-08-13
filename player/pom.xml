@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent><groupId>dk.sdu.cbse</groupId><artifactId>asteroids-final</artifactId><version>1.0-SNAPSHOT</version></parent>
+    <artifactId>dk.sdu.cbse.player</artifactId>
+    <dependencies><dependency><groupId>dk.sdu.cbse</groupId><artifactId>dk.sdu.cbse.api</artifactId><version>${project.version}</version></dependency></dependencies>
+    <build><sourceDirectory>src</sourceDirectory></build>
+</project>
